@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:telegram_clone/models/user.dart';
 import 'package:telegram_clone/services/auth.dart';
 
 void main() => runApp(MyApp());
@@ -27,16 +29,45 @@ class MyHomePage extends StatelessWidget {
           title: Text('Chachata'),
         ),
         body: Center(
-          child: Text('Welcome to Chachata'),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            dynamic result =
-                await _auth.createUser('dawitgizaw@gmail.com', 'my pass');
-            print(result);
-          },
-          tooltip: 'Increment',
-          child: Icon(Icons.add),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              FlatButton(
+                color: Colors.green,
+                child: Text('Sign up'),
+                onPressed: () async {
+                  final dynamic user =
+                      await _auth.createWithPhoneNum('+251963442365');
+                  // print(user);
+                },
+              ),
+              FlatButton(
+                color: Colors.blue,
+                child: Text('Sign in'),
+                onPressed: () async {
+                  final dynamic user =
+                      await _auth.signIn('first@gmail.com', 'password');
+                  print(user);
+                },
+              ),
+              FlatButton(
+                color: Colors.red,
+                child: Text('Sign out'),
+                onPressed: () async {
+                  final dynamic user = await _auth.signOut();
+                  print(user);
+                },
+              ),
+              FlatButton(
+                color: Colors.red,
+                child: Text('Delete Account'),
+                onPressed: () async {
+                  final dynamic user = await _auth.deleteAccount();
+                  print(user);
+                },
+              )
+            ],
+          ),
         ),
       ),
     );
