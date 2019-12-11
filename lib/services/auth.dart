@@ -5,36 +5,51 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _verificationId = '';
 
+  Stream<FirebaseUser> user() {
+    return _auth.onAuthStateChanged;
+  }
+
   Future createWithPhoneNum(String phone) async {
+    final PhoneCodeSent codeSent = (String verId, [int forcedResendToken]) {
+      print('code sent to $phone');
+    };
+
+    final PhoneVerificationCompleted verificationCompleted =
+        (AuthCredential credential) async {
+      FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
+      print('user logged in with phone::uid:${user.uid}');
+    };
+
+    final PhoneVerificationFailed verificationFailed = (AuthException e) {
+      print('verification failed');
+      print(e.message);
+    };
+
+    final PhoneCodeAutoRetrievalTimeout retrievalTimeOut = (String verId) {
+      print('auto retrieval timeout reached');
+    };
+
     try {
-      return await _auth.verifyPhoneNumber(
-        phoneNumber: phone,
-        timeout: Duration(seconds: 60),
-        verificationCompleted: _verificationCompleted,
-        verificationFailed: (AuthException e) {
-          print('verification failed');
-          print(e.message);
-        },
-        codeSent: _codeSent,
-        // codeAutoRetrievalTimeout: (String a) {});
-      );
+      await _auth.verifyPhoneNumber(
+          phoneNumber: phone,
+          codeSent: codeSent,
+          verificationFailed: verificationFailed,
+          verificationCompleted: verificationCompleted,
+          timeout: Duration(seconds: 10),
+          codeAutoRetrievalTimeout: retrievalTimeOut);
     } catch (e) {
       return null;
     }
   }
 
-  _verificationCompleted(AuthCredential credential) async {
-    print('verification complete');
-    print(credential);
-    // try {
-    //   FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
-    // } catch (e) {}
-  }
-
-  _codeSent(String verificationId, [int forceResendingToken]) async {
-    this._verificationId = verificationId;
-    print('code sent');
-  }
+  // void _signInWithPhoneNumber(String smsCode) async {
+  //   final _authCredential = await PhoneAuthProvider.getCredential(
+  //       verificationId: _verificationId, smsCode: smsCode);
+  //   _auth
+  //       .signInWithCredential(_authCredential)
+  //       .catchError((error) {})
+  //       .then((user) async {});
+  // }
 
   Future<User> createUser(String email, String password) async {
     try {
@@ -42,8 +57,8 @@ class AuthService {
               email: email, password: password))
           .user;
       return User.fromFirebaseUser(user);
-    } catch (e) {
-      print(e.toString());
+    } catch (ple) {
+      print(ple.toString());
       return null;
     }
   }
