@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:telegram_clone/models/user.dart';
 
@@ -5,8 +6,12 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _verificationId = '';
 
-  Stream<FirebaseUser> user() {
-    return _auth.onAuthStateChanged;
+  User _fromFirebaseUser(FirebaseUser user) {
+    return user != null ? User(uid: user.uid) : null;
+  }
+
+  Stream<User> get user {
+    return _auth.onAuthStateChanged.map(_fromFirebaseUser);
   }
 
   Future createWithPhoneNum(String phone) async {
@@ -56,7 +61,7 @@ class AuthService {
       FirebaseUser user = (await _auth.createUserWithEmailAndPassword(
               email: email, password: password))
           .user;
-      return User.fromFirebaseUser(user);
+      return _fromFirebaseUser(user);
     } catch (ple) {
       print(ple.toString());
       return null;
@@ -68,7 +73,7 @@ class AuthService {
       FirebaseUser user = (await _auth.signInWithEmailAndPassword(
               email: email, password: password))
           .user;
-      return User.fromFirebaseUser(user);
+      return _fromFirebaseUser(user);
     } catch (e) {
       print(e.toString());
       return null;
